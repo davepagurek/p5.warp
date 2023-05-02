@@ -3,6 +3,7 @@ import type P5 from 'p5'
 
 type DistortionOptions = {
   type?: 'specular' | 'normal'
+  space?: 'world' | 'local'
 }
 
 type Params = {
@@ -42,7 +43,7 @@ declare class p5 extends P5 {
 
 const createWarp = function(
   getOffset: (params: Params) => VectorOp,
-  { type = 'specular' }: DistortionOptions = {}
+  { type = 'specular', space = 'local' }: DistortionOptions = {}
 ) {
   const vert = `precision highp float;
 precision highp int;
@@ -76,8 +77,10 @@ uniform vec2 size;
 void main(void) {
   vColor = (uUseVertexColor ? aVertexColor : uMaterialColor);
 
+  ${space === 'world' ? 'vec3 world = (uModelViewMatrix * vec4(aPosition, 1.0)).xyz;' : ''}
+
   ${gen((glsl) => {
-    const position = glsl.vec3Param('aPosition')
+    const position = glsl.vec3Param(space === 'world' ? 'world' : 'aPosition')
     const millis = glsl.param('millis')
     const mouse = glsl.vec2Param('mouse')
     const mouseX = mouse.x()
@@ -111,7 +114,9 @@ void main(void) {
     adjustedNormal.output('adjustedNormal')
   })}
 
-  vec4 viewModelPosition = uModelViewMatrix * vec4(aPosition + offset, 1.0);
+  vec4 viewModelPosition = ${space === 'world'
+    ? 'vec4(world + offset, 1.0)'
+    : 'uModelViewMatrix * vec4(aPosition + offset, 1.0)'};
 
   // Pass varyings to fragment shader
   vViewPosition = viewModelPosition.xyz;
