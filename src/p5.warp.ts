@@ -78,6 +78,7 @@ void main(void) {
   vColor = (uUseVertexColor ? aVertexColor : uMaterialColor);
 
   ${space === 'world' ? 'vec3 world = (uModelViewMatrix * vec4(aPosition, 1.0)).xyz;' : ''}
+  ${space === 'world' ? 'vec3 worldNormal = uNormalMatrix * aNormal;' : ''}
 
   ${gen((glsl) => {
     const position = glsl.vec3Param(space === 'world' ? 'world' : 'aPosition')
@@ -90,7 +91,7 @@ void main(void) {
     const width = size.x()
     const height = size.y()
     const uv = glsl.vec2Param('aTexCoord')
-    const normal = glsl.vec2Param('aNormal')
+    const normal = glsl.vec2Param(space === 'world' ? 'worldNormal' : 'aNormal')
     const color = glsl.vec4Param('vColor')
 
     const offset = getOffset({
@@ -122,7 +123,7 @@ void main(void) {
   vViewPosition = viewModelPosition.xyz;
   gl_Position = uProjectionMatrix * viewModelPosition;  
 
-  vNormal = uNormalMatrix * adjustedNormal;
+  vNormal = ${space === 'world' ? '' : 'uNormalMatrix *'} adjustedNormal;
   vTexCoord = aTexCoord;
 
   // TODO: this should be a uniform
