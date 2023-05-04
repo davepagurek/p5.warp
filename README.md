@@ -57,9 +57,11 @@ function draw() {
 
 ### Warp inputs
 
-The function you pass to `createWarp` will be passed an object with the following type:
+`createWarp` has the following signature:
 
 ```typescript
+createWarp(offset: (params: Params) => VecOp, options?: Options)
+
 type Params = {
   glsl: AD
   position: VecParam
@@ -75,11 +77,16 @@ type Params = {
   height: Param
   color: VecParam
 }
+
+type Options = {
+  type?: 'specular' | 'normal'
+  space?: 'world' | 'local'
+}
 ```
 
-Here's what each property is and how you might want to use them:
+A `params` object is passed as an input to your offset function. Here's what each property is and how you might want to use them:
 - `glsl` is an instance of the [glsl-autodiff library.](https://github.com/davepagurek/glsl-autodiff#operations) From it, you can create now constant values (e.g. `glsl.val(123)`, `glsl.val(Math.PI)`, etc), or create vectors containing other values (e.g. `glsl.vec3(0, 1, position.x()`)
-- `position` is a `vec3` with the object-space position of each vertex. Note that the general scale of these values will vary from shape to shape: `sphere()` goes from -1 to 1, while a normalized `p5.Geometry` will have values ranging from -100 to 100.
+- `position` is a `vec3` with the position of each vertex, by default in object space. Note that the general scale of these values will vary from shape to shape: `sphere()` goes from -1 to 1, while a normalized `p5.Geometry` will have values ranging from -100 to 100. Pass `space: 'world'` in the options object to use world-space coordinates, which will not have a different scale per object.
 - `uv` is a `vec2` with the texture coordinate for each vertex.
 - `normal` is a `vec3` with the normal for that vertex, which is a direction pointing directly out of the surface.
 - `mouse` is a `vec2` with p5's `mouseX` and `mouseY` values stored in x and y.
@@ -93,3 +100,7 @@ Here's what each property is and how you might want to use them:
 - `color` is a `vec4` representing either the whole model's fill color, or the per-vertex fill color if it exists.
 
 Each input property comes from `glsl-autodiff`. You can see a [full list of the methods you can call on them in the `glsl-autodiff` readme.](https://github.com/davepagurek/glsl-autodiff#operations)
+
+After your offset function, you can specify an optional `options` object with these properties:
+- `type`: The type of p5 material to make, either `specular` or `normal`, corresponding to p5's `specularMaterial()` and `normalMaterial()`. The default is `specular`.
+- `space`: what coordinate space the `position` property of the offset params will be in, either `world` or `local`. The default is `local`.
