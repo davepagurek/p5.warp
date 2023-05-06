@@ -9,10 +9,10 @@
   dependencies:
     "@jridgewell/trace-mapping" "0.3.9"
 
-"@davepagurek/glsl-autodiff@^0.0.17":
-  version "0.0.17"
-  resolved "https://registry.yarnpkg.com/@davepagurek/glsl-autodiff/-/glsl-autodiff-0.0.17.tgz#0ce8812736dd3982ce5d05484df8ef5a84e0b391"
-  integrity sha512-cSWGVi7RUn3fQaOZAVM+cGD0WiM3VfnIYvK89kmpB/A1vzu3zblx4qqtxXlJcxMX9Gzw18QIWvCCFLbsqOlNYg==
+"@davepagurek/glsl-autodiff@^0.0.18":
+  version "0.0.18"
+  resolved "https://registry.yarnpkg.com/@davepagurek/glsl-autodiff/-/glsl-autodiff-0.0.18.tgz#ae0653696e9dd3f491e5a536adc942d518fa862c"
+  integrity sha512-VXcGe0hPdL+C2EJi5FqMbfoDuPJRNormbMRg3ptMoGtLV2VWtWUVOaMSK3ZSmLDVhbiQqfFo4Mv/ug/ryTNdLw==
   dependencies:
     lodash "^4.17.21"
 

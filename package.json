@@ -1,6 +1,6 @@
 {
   "name": "@davepagurek/p5.warp",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "main": "build/p5.warp.js",
   "author": "Dave Pagurek <dave@davepagurek.com>",
   "license": "MIT",
@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/davepagurek/p5.warp",
   "dependencies": {
-    "@davepagurek/glsl-autodiff": "^0.0.17",
+    "@davepagurek/glsl-autodiff": "^0.0.18",
     "@types/p5": "^1.6.1",
     "p5": "^1.6.0"
   },
