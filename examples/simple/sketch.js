@@ -6,7 +6,7 @@ let warpPicker
 let objPicker
 
 function preload() {
-  bunny = loadModel('bunny.obj', true)
+  bunny = loadModel('../bunny.obj', true)
 }
 
 function setup() {
