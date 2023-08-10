@@ -25,15 +25,12 @@ Or on OpenProcessing, add the CDN link as a library:
 https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.8
 ```
 
-If you're using p5 in instance mode, you can set up p5.warp on a specific instance:
+If you're using p5 without importing it globally, you can manually set up p5.warp:
 
 ```js
 import P5 from 'p5'
 import { setupWarp } from '@davepagurek/p5.warp'
-const myp5 = new P5((p5) => {
-  setupWarp(p5)
-  // etc
-})
+setupWarp(P5)
 ```
 
 ### Making a warp
