@@ -1,6 +1,6 @@
 {
   "name": "@davepagurek/p5.warp",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "build/p5.warp.js",
   "author": "Dave Pagurek <dave@davepagurek.com>",
   "license": "MIT",

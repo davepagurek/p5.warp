@@ -336,5 +336,13 @@ void main(void) {
   return material
 }
 
-p5.prototype.createWarp = createWarp
-p5.Graphics.prototype.createWarp = createWarp
+const setup = (p5: P5) => {
+  // @ts-ignore
+  p5.prototype.createWarp = createWarp
+  // @ts-ignore
+  p5.Graphics.prototype.createWarp = createWarp
+}
+// @ts-ignore
+if (p5) setup(p5)
+
+export default setup
