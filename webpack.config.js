@@ -7,6 +7,8 @@ module.exports = (env, argv) => {
     output: {
       filename: 'p5.warp.js',
       path: path.resolve(__dirname, 'build'),
+      libraryTarget: 'umd',
+      library: 'P5Warp',
     },
     context: path.resolve(__dirname, 'src'),
     mode,

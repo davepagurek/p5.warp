@@ -16,20 +16,20 @@ It uses a vertex shader to adjust the position of each point on a model accordin
 Add the library in a script tag:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.7"></script>
+<script src="https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.8"></script>
 ```
 
 Or on OpenProcessing, add the CDN link as a library:
 
 ```
-https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.7
+https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.8
 ```
 
 If you're using p5 in instance mode, you can set up p5.warp on a specific instance:
 
 ```js
 import P5 from 'p5'
-import setupWarp from '@davepagurek/p5.warp'
+import { setupWarp } from '@davepagurek/p5.warp'
 const myp5 = new P5((p5) => {
   setupWarp(p5)
   // etc
