@@ -343,6 +343,6 @@ const setup = (p5: P5) => {
   p5.Graphics.prototype.createWarp = createWarp
 }
 // @ts-ignore
-if (p5) setup(p5)
+if (window.p5) setup(p5)
 
 export default setup
