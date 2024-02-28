@@ -4,9 +4,11 @@ let distort
 let twist
 let warpPicker
 let objPicker
+let spheremap
 
 function preload() {
   bunny = loadModel('../bunny.obj', true)
+  spheremap = loadImage('https://p5js.org/reference/assets/outdoor_spheremap.jpg')
 }
 
 function setup() {
@@ -60,9 +62,10 @@ function draw() {
   
   push()
   noStroke()
-  ambientLight(128, 128, 128)
-  directionalLight(100, 100, 128, -0.8, 0, -1)
-  directionalLight(30, 30, 30, 1, 1, -0.5)
+  // ambientLight(128, 128, 128)
+  // directionalLight(100, 100, 128, -0.8, 0, -1)
+  // directionalLight(30, 30, 30, 1, 1, -0.5)
+  imageLight(spheremap)
   
   if (warpPicker.value() === 'twist') {
     twist()
