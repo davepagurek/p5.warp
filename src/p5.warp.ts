@@ -45,13 +45,43 @@ const createWarp = function (
   getOffset: (params: Params) => VectorOp,
   { type = "specular", space = "local" }: DistortionOptions = {},
 ) {
-  const vert = `precision highp float;
+  const p5 = this as P5.p5InstanceExtensions | P5.Graphics;
+  const compatibility = `
+#ifdef WEBGL2
+
+#define IN in
+#define OUT out
+
+#ifdef FRAGMENT_SHADER
+out vec4 outColor;
+#define OUT_COLOR outColor
+#endif
+#define TEXTURE texture
+
+#else
+
+#ifdef FRAGMENT_SHADER
+#define IN varying
+#else
+#define IN attribute
+#endif
+#define OUT varying
+#define TEXTURE texture2D
+
+#ifdef FRAGMENT_SHADER
+#define OUT_COLOR gl_FragColor
+#endif
+
+#endif`
+
+  const vert = `${webGL2CompatibilityPrefix(this, 'vert', 'highp')}
+${compatibility}
 precision highp int;
 
-attribute vec3 aPosition;
-attribute vec3 aNormal;
-attribute vec2 aTexCoord;
-attribute vec4 aVertexColor;
+IN vec3 aPosition;
+IN vec3 aNormal;
+IN vec2 aTexCoord;
+IN vec4 aVertexColor;
 
 uniform vec3 uAmbientColor[5];
 
@@ -63,11 +93,11 @@ uniform int uAmbientLightCount;
 uniform bool uUseVertexColor;
 uniform vec4 uMaterialColor;
 
-varying vec3 vNormal;
-varying vec2 vTexCoord;
-varying vec3 vViewPosition;
-varying vec3 vAmbientColor;
-varying vec4 vColor;
+OUT vec3 vNormal;
+OUT vec2 vTexCoord;
+OUT vec3 vViewPosition;
+OUT vec3 vAmbientColor;
+OUT vec4 vColor;
 
 uniform vec2 mouse;
 uniform float millis;
@@ -143,7 +173,9 @@ void main(void) {
   }
 }`;
 
-  const frag = `precision highp float;
+  const frag = `${webGL2CompatibilityPrefix(this, 'frag', 'highp')}
+${compatibility}
+#define PI 3.141592
 precision highp int;
 
 uniform bool normalMaterial;
@@ -157,11 +189,11 @@ uniform sampler2D uSampler;
 uniform bool isTexture;
 uniform bool uHasSetAmbient;
 
-varying vec3 vNormal;
-varying vec2 vTexCoord;
-varying vec3 vViewPosition;
-varying vec3 vAmbientColor;
-varying vec4 vColor;
+IN vec3 vNormal;
+IN vec2 vTexCoord;
+IN vec3 vViewPosition;
+IN vec3 vAmbientColor;
+IN vec4 vColor;
 
 uniform mat4 uViewMatrix;
 
@@ -195,6 +227,16 @@ uniform float uConstantAttenuation;
 uniform float uLinearAttenuation;
 uniform float uQuadraticAttenuation;
 
+// setting from  _setImageLightUniforms()
+// boolean to initiate the calculateImageDiffuse and calculateImageSpecular
+uniform bool uUseImageLight;
+// texture for use in calculateImageDiffuse
+uniform sampler2D environmentMapDiffused;
+// texture for use in calculateImageSpecular
+uniform sampler2D environmentMapSpecular;
+// roughness for use in calculateImageSpecular
+uniform float levelOfDetail;
+
 const float specularFactor = 2.0;
 const float diffuseFactor = 0.73;
 
@@ -227,6 +269,60 @@ LightResult _light(vec3 viewDirection, vec3 normal, vec3 lightVector) {
     lr.specular = _phongSpecular(lightDir, viewDirection, normal, uShininess);
   lr.diffuse = _lambertDiffuse(lightDir, normal);
   return lr;
+}
+
+// converts the range of "value" from [min1 to max1] to [min2 to max2]
+float map(float value, float min1, float max1, float min2, float max2) {
+  return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+}
+
+vec2 mapTextureToNormal( vec3 v ){
+  // x = r sin(phi) cos(theta)   
+  // y = r cos(phi)  
+  // z = r sin(phi) sin(theta)
+  float phi = acos( v.y );
+  // if phi is 0, then there are no x, z components
+  float theta = 0.0;
+  // else 
+  theta = acos(v.x / sin(phi));
+  float sinTheta = v.z / sin(phi);
+  if (sinTheta < 0.0) {
+    // Turn it into -theta, but in the 0-2PI range
+    theta = 2.0 * PI - theta;
+  }
+  theta = theta / (2.0 * 3.14159);
+  phi = phi / 3.14159 ;
+  
+  vec2 angles = vec2( fract(theta + 0.25), 1.0 - phi );
+  return angles;
+}
+
+
+vec3 calculateImageDiffuse( vec3 vNormal, vec3 vViewPosition ){
+  // make 2 seperate builds 
+  vec3 worldCameraPosition =  vec3(0.0, 0.0, 0.0);  // hardcoded world camera position
+  vec3 worldNormal = normalize(vNormal);
+  vec2 newTexCoor = mapTextureToNormal( worldNormal );
+  vec4 texture = TEXTURE( environmentMapDiffused, newTexCoor );
+  // this is to make the darker sections more dark
+  // png and jpg usually flatten the brightness so it is to reverse that
+  return smoothstep(vec3(0.0), vec3(0.8), texture.xyz);
+}
+
+vec3 calculateImageSpecular( vec3 vNormal, vec3 vViewPosition ){
+  vec3 worldCameraPosition =  vec3(0.0, 0.0, 0.0);
+  vec3 worldNormal = normalize(vNormal);
+  vec3 lightDirection = normalize( vViewPosition - worldCameraPosition );
+  vec3 R = reflect(lightDirection, worldNormal);
+  vec2 newTexCoor = mapTextureToNormal( R );
+#ifdef WEBGL2
+  vec4 outColor = textureLod(environmentMapSpecular, newTexCoor, levelOfDetail);
+#else
+  vec4 outColor = TEXTURE(environmentMapSpecular, newTexCoor);
+#endif
+  // this is to make the darker sections more dark
+  // png and jpg usually flatten the brightness so it is to reverse that
+  return pow(outColor.xyz, vec3(10.0));
 }
 
 void totalLight(
@@ -300,13 +396,18 @@ void totalLight(
     }
   }
 
+  if( uUseImageLight ){
+    totalDiffuse += calculateImageDiffuse(normal, modelPosition);
+    totalSpecular += calculateImageSpecular(normal, modelPosition);
+  }
+
   totalDiffuse *= diffuseFactor;
   totalSpecular *= specularFactor;
 }
 
 void main(void) {
   if (normalMaterial) {
-    gl_FragColor = vec4(abs(normalize(vNormal)), 1.0);
+    OUT_COLOR = vec4(abs(normalize(vNormal)), 1.0);
     return;
   }
 
@@ -320,11 +421,11 @@ void main(void) {
     // Textures come in with premultiplied alpha. To apply tint and still have
     // premultiplied alpha output, we need to multiply the RGB channels by the
     // tint RGB, and all channels by the tint alpha.
-    ? texture2D(uSampler, vTexCoord) * vec4(uTint.rgb/255., 1.) * (uTint.a/255.)
+    ? TEXTURE(uSampler, vTexCoord) * vec4(uTint.rgb/255., 1.) * (uTint.a/255.)
     // Colors come in with unmultiplied alpha, so we need to multiply the RGB
     // channels by alpha to convert it to premultiplied alpha.
     : vec4(vColor.rgb * vColor.a, vColor.a);
-  gl_FragColor = vec4(diffuse * baseColor.rgb + 
+  OUT_COLOR = vec4(diffuse * baseColor.rgb + 
                     vAmbientColor * (
                       uHasSetAmbient ? uAmbientMatColor.rgb : baseColor.rgb
                     ) + 
@@ -332,7 +433,6 @@ void main(void) {
                     uEmissiveMatColor.rgb, baseColor.a);
 }`;
 
-  const p5 = this as P5.p5InstanceExtensions | P5.Graphics;
   const materialShader: P5.Shader = this.createShader(vert, frag);
   const material: Material = () => {
     p5.shader(materialShader);
@@ -346,6 +446,26 @@ void main(void) {
 
   return material;
 };
+
+function webGL2CompatibilityPrefix(
+  p5: P5,
+  shaderType: 'vert' | 'frag',
+  floatPrecision: 'lowp' | 'mediump' | 'highp'
+) {
+  let code = '';
+  if (p5.webglVersion === p5.WEBGL2) {
+    code += '#version 300 es\n#define WEBGL2\n';
+  }
+  if (shaderType === 'vert') {
+    code += '#define VERTEX_SHADER\n';
+  } else if (shaderType === 'frag') {
+    code += '#define FRAGMENT_SHADER\n';
+  }
+  if (floatPrecision) {
+    code += `precision ${floatPrecision} float;\n`;
+  }
+  return code;
+}
 
 export const setupWarp = (p5: P5) => {
   // @ts-ignore
