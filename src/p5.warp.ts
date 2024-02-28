@@ -1,49 +1,49 @@
-import { gen, AD, VectorOp, VecParam, Param } from '@davepagurek/glsl-autodiff'
-import type P5 from 'p5'
+import { gen, AD, VectorOp, VecParam, Param } from "@davepagurek/glsl-autodiff";
+import type P5 from "p5";
 
 type DistortionOptions = {
-  type?: 'specular' | 'normal'
-  space?: 'world' | 'local'
-}
+  type?: "specular" | "normal";
+  space?: "world" | "local";
+};
 
 type Params = {
-  glsl: AD
-  position: VecParam
-  uv: VecParam
-  normal: VecParam
-  mouse: VecParam
-  mouseX: Param
-  mouseY: Param
-  millis: Param
-  pixelDensity: Param
-  size: VecParam
-  width: Param
-  height: Param
-  color: VecParam
-}
+  glsl: AD;
+  position: VecParam;
+  uv: VecParam;
+  normal: VecParam;
+  mouse: VecParam;
+  mouseX: Param;
+  mouseY: Param;
+  millis: Param;
+  pixelDensity: Param;
+  size: VecParam;
+  width: Param;
+  height: Param;
+  color: VecParam;
+};
 
-type Material = () => void
+type Material = () => void;
 
-declare module 'P5' {
+declare module "P5" {
   interface __Graphics__ {
     createWarp(
       getOffset: (params: Params) => VectorOp,
-      options: DistortionOptions
-    ): Material
+      options: DistortionOptions,
+    ): Material;
   }
 }
 
 declare class p5 extends P5 {
   createWarp(
     getOffset: (params: Params) => VectorOp,
-    options: DistortionOptions
-  ): Material
-  static Graphics: new (...args: any[]) => P5.Graphics
+    options: DistortionOptions,
+  ): Material;
+  static Graphics: new (...args: any[]) => P5.Graphics;
 }
 
-const createWarp = function(
+const createWarp = function (
   getOffset: (params: Params) => VectorOp,
-  { type = 'specular', space = 'local' }: DistortionOptions = {}
+  { type = "specular", space = "local" }: DistortionOptions = {},
 ) {
   const vert = `precision highp float;
 precision highp int;
@@ -77,22 +77,28 @@ uniform vec2 size;
 void main(void) {
   vColor = (uUseVertexColor ? aVertexColor : uMaterialColor);
 
-  ${space === 'world' ? 'vec3 world = (uModelViewMatrix * vec4(aPosition, 1.0)).xyz;' : ''}
-  ${space === 'world' ? 'vec3 worldNormal = uNormalMatrix * aNormal;' : ''}
+  ${
+    space === "world"
+      ? "vec3 world = (uModelViewMatrix * vec4(aPosition, 1.0)).xyz;"
+      : ""
+  }
+  ${space === "world" ? "vec3 worldNormal = uNormalMatrix * aNormal;" : ""}
 
   ${gen((glsl) => {
-    const position = glsl.vec3Param(space === 'world' ? 'world' : 'aPosition')
-    const millis = glsl.param('millis')
-    const mouse = glsl.vec2Param('mouse')
-    const mouseX = mouse.x()
-    const mouseY = mouse.y()
-    const pixelDensity = glsl.param('pixelDensity')
-    const size = glsl.vec2Param('size')
-    const width = size.x()
-    const height = size.y()
-    const uv = glsl.vec2Param('aTexCoord')
-    const normal = glsl.vec2Param(space === 'world' ? 'worldNormal' : 'aNormal')
-    const color = glsl.vec4Param('vColor')
+    const position = glsl.vec3Param(space === "world" ? "world" : "aPosition");
+    const millis = glsl.param("millis");
+    const mouse = glsl.vec2Param("mouse");
+    const mouseX = mouse.x();
+    const mouseY = mouse.y();
+    const pixelDensity = glsl.param("pixelDensity");
+    const size = glsl.vec2Param("size");
+    const width = size.x();
+    const height = size.y();
+    const uv = glsl.vec2Param("aTexCoord");
+    const normal = glsl.vec2Param(
+      space === "world" ? "worldNormal" : "aNormal",
+    );
+    const color = glsl.vec4Param("vColor");
 
     const offset = getOffset({
       glsl,
@@ -108,22 +114,24 @@ void main(void) {
       uv,
       normal,
       color,
-    })
-    offset.output('offset')
+    });
+    offset.output("offset");
 
-    const adjustedNormal = offset.adjustNormal(normal, position)
-    adjustedNormal.output('adjustedNormal')
+    const adjustedNormal = offset.adjustNormal(normal, position);
+    adjustedNormal.output("adjustedNormal");
   })}
 
-  vec4 viewModelPosition = ${space === 'world'
-    ? 'vec4(world + offset, 1.0)'
-    : 'uModelViewMatrix * vec4(aPosition + offset, 1.0)'};
+  vec4 viewModelPosition = ${
+    space === "world"
+      ? "vec4(world + offset, 1.0)"
+      : "uModelViewMatrix * vec4(aPosition + offset, 1.0)"
+  };
 
   // Pass varyings to fragment shader
   vViewPosition = viewModelPosition.xyz;
   gl_Position = uProjectionMatrix * viewModelPosition;  
 
-  vNormal = ${space === 'world' ? '' : 'uNormalMatrix *'} adjustedNormal;
+  vNormal = ${space === "world" ? "" : "uNormalMatrix *"} adjustedNormal;
   vTexCoord = aTexCoord;
 
   // TODO: this should be a uniform
@@ -133,7 +141,7 @@ void main(void) {
       vAmbientColor += uAmbientColor[i];
     }
   }
-}`
+}`;
 
   const frag = `precision highp float;
 precision highp int;
@@ -147,6 +155,7 @@ uniform vec4 uEmissiveMatColor;
 uniform vec4 uTint;
 uniform sampler2D uSampler;
 uniform bool isTexture;
+uniform bool uHasSetAmbient;
 
 varying vec3 vNormal;
 varying vec2 vTexCoord;
@@ -316,31 +325,33 @@ void main(void) {
     // channels by alpha to convert it to premultiplied alpha.
     : vec4(vColor.rgb * vColor.a, vColor.a);
   gl_FragColor = vec4(diffuse * baseColor.rgb + 
-                    vAmbientColor * uAmbientMatColor.rgb + 
+                    vAmbientColor * (
+                      uHasSetAmbient ? uAmbientMatColor.rgb : baseColor.rgb
+                    ) + 
                     specular * uSpecularMatColor.rgb + 
                     uEmissiveMatColor.rgb, baseColor.a);
-}`
+}`;
 
-  const p5 = this as P5.p5InstanceExtensions | P5.Graphics
-  const materialShader: P5.Shader = this.createShader(vert, frag)
+  const p5 = this as P5.p5InstanceExtensions | P5.Graphics;
+  const materialShader: P5.Shader = this.createShader(vert, frag);
   const material: Material = () => {
-    p5.shader(materialShader)
-    materialShader.setUniform('mouse', [p5.mouseX, p5.mouseY])
-    materialShader.setUniform('millis', p5.millis())
-    materialShader.setUniform('pixelDensity', p5.pixelDensity())
-    materialShader.setUniform('size', [p5.width, p5.height])
-    materialShader.setUniform('normalMaterial', type === 'normal')
-    p5.noStroke()
-  }
+    p5.shader(materialShader);
+    materialShader.setUniform("mouse", [p5.mouseX, p5.mouseY]);
+    materialShader.setUniform("millis", p5.millis());
+    materialShader.setUniform("pixelDensity", p5.pixelDensity());
+    materialShader.setUniform("size", [p5.width, p5.height]);
+    materialShader.setUniform("normalMaterial", type === "normal");
+    p5.noStroke();
+  };
 
-  return material
-}
+  return material;
+};
 
 export const setupWarp = (p5: P5) => {
   // @ts-ignore
-  p5.prototype.createWarp = createWarp
+  p5.prototype.createWarp = createWarp;
   // @ts-ignore
-  p5.Graphics.prototype.createWarp = createWarp
-}
+  p5.Graphics.prototype.createWarp = createWarp;
+};
 // @ts-ignore
-if (window.p5) setupWarp(p5)
+if (window.p5) setupWarp(p5);
