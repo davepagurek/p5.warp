@@ -23,7 +23,7 @@ type Params = {
   color: VecParam;
 };
 
-type Material = () => void;
+type Material = (uniforms?: Record<string, any>) => void;
 
 declare module "P5" {
   interface __Graphics__ {
@@ -437,13 +437,16 @@ void main(void) {
 }`;
 
   const materialShader: P5.Shader = this.createShader(vert, frag);
-  const material: Material = () => {
+  const material: Material = (uniforms = {}) => {
     p5.shader(materialShader);
     materialShader.setUniform("mouse", [p5.mouseX, p5.mouseY]);
     materialShader.setUniform("millis", p5.millis());
     materialShader.setUniform("pixelDensity", p5.pixelDensity());
     materialShader.setUniform("size", [p5.width, p5.height]);
     materialShader.setUniform("normalMaterial", type === "normal");
+    for (const key in uniforms) {
+      materialShader.setUniform(key, uniforms[key]);
+    }
     p5.noStroke();
   };
 

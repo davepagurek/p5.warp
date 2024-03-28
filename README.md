@@ -16,13 +16,13 @@ It uses a vertex shader to adjust the position of each point on a model accordin
 Add the library in a script tag:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.11"></script>
+<script src="https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.12"></script>
 ```
 
 Or on OpenProcessing, add the CDN link as a library:
 
 ```
-https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.11
+https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.12
 ```
 
 If you're using p5 without importing it globally, you can manually set up p5.warp:
@@ -113,4 +113,4 @@ Each input property comes from `glsl-autodiff`. You can see a [full list of the 
 After your offset function, you can specify an optional `options` object with these properties:
 - `type`: The type of p5 material to make, either `specular` or `normal`, corresponding to p5's `specularMaterial()` and `normalMaterial()`. The default is `specular`.
 - `space`: what coordinate space the `position` property of the offset params will be in, either `world` or `local`. The default is `local`.
-- `defs`: A string with any uniforms you want to splice into the header of the shader. You can then reference them by using `glsl.param('myUniform')` within your distortion function.
+- `defs`: A string with any uniforms you want to splice into the header of the shader. You can then reference them by using `glsl.param('myUniform')` within your distortion function, and pass in an object of uniforms when you apply the distortion, e.g. `distort({ myUniform: 0.5 })`
