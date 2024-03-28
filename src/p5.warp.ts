@@ -4,6 +4,7 @@ import type P5 from "p5";
 type DistortionOptions = {
   type?: "specular" | "normal";
   space?: "world" | "local";
+  defs?: string;
 };
 
 type Params = {
@@ -43,7 +44,7 @@ declare class p5 extends P5 {
 
 const createWarp = function (
   getOffset: (params: Params) => VectorOp,
-  { type = "specular", space = "local" }: DistortionOptions = {},
+  { type = "specular", space = "local", defs = "" }: DistortionOptions = {},
 ) {
   const p5 = this as P5.p5InstanceExtensions | P5.Graphics;
   const compatibility = `
@@ -82,6 +83,8 @@ IN vec3 aPosition;
 IN vec3 aNormal;
 IN vec2 aTexCoord;
 IN vec4 aVertexColor;
+
+${defs}
 
 uniform vec3 uAmbientColor[5];
 
