@@ -6,13 +6,11 @@ let warpPicker
 let objPicker
 let spheremap
 
-function preload() {
-  bunny = loadModel('../bunny.obj', true)
-  spheremap = loadImage('https://p5js.org/reference/assets/outdoor_spheremap.jpg')
-}
-
-function setup() {
+async function setup() {
   createCanvas(600, 600, WEBGL);
+  bunny = await loadModel('../bunny.obj', true)
+  bunny.computeNormals()
+  spheremap = await loadImage('https://p5js.org/assets/outdoor_spheremap.jpg')
   cube = makeCube(12)
   warpPicker = createSelect()
   warpPicker.option('none')
@@ -35,7 +33,7 @@ function setup() {
   }, { space: 'world' })
   
   twist = createWarp(({ glsl, millis, position }) => {
-    const center = glsl.vec3(0, 0, -500)
+    const center = glsl.vec3(0, 0, 0)
     const rotateX = (pos, angle) => {
       const sa = glsl.sin(angle)
       const ca = glsl.cos(angle)

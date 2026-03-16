@@ -1,5 +1,5 @@
 # p5.warp
-Fast 3D domain warping in p5
+Fast 3D domain warping in p5.js 2.x
 
 ![warp](https://user-images.githubusercontent.com/5315059/235771152-13493afd-5d1f-4da3-b160-05d2b1028cfb.gif)
 
@@ -16,13 +16,13 @@ It uses a vertex shader to adjust the position of each point on a model accordin
 Add the library in a script tag:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.12"></script>
+<script src="https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@1.0.0"></script>
 ```
 
 Or on OpenProcessing, add the CDN link as a library:
 
 ```
-https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.12
+https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@1.0.0
 ```
 
 If you're using p5 without importing it globally, you can manually set up p5.warp:
@@ -32,6 +32,16 @@ import P5 from 'p5'
 import { setupWarp } from '@davepagurek/p5.warp'
 setupWarp(P5)
 ```
+
+<details>
+<summary>p5.js 1.x usage</summary>
+Note: for p5.js 1.x, use the latest 0.x version of this library:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@davepagurek/p5.warp@0.0.12"></script>
+```
+
+</details>
 
 ### Making a warp
 

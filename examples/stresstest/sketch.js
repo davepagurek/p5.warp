@@ -17,19 +17,21 @@ let fps
 let avgFps = 0
 const fpsSamples = []
 let vertCount
+let sphereGeom
+let planeGeom
+let _renderer
 const type = 'normal'
 
 // p5.prototype.millis = () => 1200
 
-function preload() {
-  bunny = loadModel('../bunny.obj', true)
-  airplane = loadModel('../plane.obj', true)
-  dialog = loadModel('../dialog.obj', true)
-}
-
-function setup() {
+async function setup() {
   createCanvas(600, 600, WEBGL);
-  setAttributes({ antialias: true });
+  bunny = await loadModel('../bunny.obj', true)
+  bunny.computeNormals();
+  airplane = await loadModel('../plane.obj', true)
+  dialog = await loadModel('../dialog.obj', true)
+  setAttributes({ antialias: true })
+  _renderer = p5.instance._renderer
   fps = createP()
   fps.position(10, 0)
   
@@ -225,6 +227,13 @@ function setup() {
       0
     )
   }, { type })
+
+  sphereGeom = buildGeometry(() => {
+    sphere(150, 30, 50)
+  })
+  planeGeom = buildGeometry(() => {
+      plane(150, 150, 20, 20)
+  })
 }
 
 function draw() {
@@ -325,7 +334,8 @@ function draw() {
     }
     case 'sphere': {
       sphere(150, 30, 50)
-      geom = _renderer.retainedMode.geometry[`ellipsoid|1|1`]
+      // geom = _renderer.geometry[`ellipsoid|1|1`]
+      geom = sphereGeom
       break
     }
     case 'planeX': {
@@ -336,9 +346,10 @@ function draw() {
       vertex(0, 75, -75)
       vertex(0, 75, 75)
       endShape()
+      geom = planeGeom
       /*rotateX(PI/2)
       plane(150, 150, 20, 20)
-      geom = _renderer.retainedMode.geometry[`plane|1|1`]*/
+      geom = _renderer.geometry[`plane|1|1`]*/
       break
     }
     case 'planeY': {
@@ -349,14 +360,16 @@ function draw() {
       vertex(75, 0, -75)
       vertex(75, 0, 75)
       endShape()
+      geom = planeGeom
       /*rotateY(PI/2)
       plane(150, 150, 20, 20)
-      geom = _renderer.retainedMode.geometry[`plane|1|1`]*/
+      geom = _renderer.geometry[`plane|1|1`]*/
       break
     }
     case 'planeZ': {
       plane(150, 150, 20, 20)
-      geom = _renderer.retainedMode.geometry[`plane|1|1`]
+      geom = planeGeom
+      // geom = _renderer.geometry[`plane|1|1`]
       break
     }
   }
